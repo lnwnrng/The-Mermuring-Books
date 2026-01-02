@@ -1,4 +1,8 @@
 # The Mermuring Books（呓语书屋）
+![version](https://img.shields.io/badge/version-1.0-blue?style=flat-square)
+![node](https://img.shields.io/badge/node-18%2B-brightgreen?style=flat-square)
+![license](https://img.shields.io/github/license/lnwnrng/The-Mermuring-Books?style=flat-square)
+
 
 （本科数据库大作业：网上书店。全程使用ai完成，前端使用gemini3，后端使用codex，界面优美，要求的功能已全部实现）
 
