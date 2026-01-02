@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  role         UserRole
+  name         String
+  avatar       String?  @db.VarChar(512)
+  phone        String?  @db.VarChar(32)
+  creditLevel  String?  @db.VarChar(50) @default("60")
+  balance      Decimal  @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  orders       Order[]
+  favorites    Favorite[]
+  missingRequests MissingRequest[]
+}
+
+model Book {
+  id          String    @id @default(cuid())
+  title       String
+  author      String
+  publisher   String?
+  isbn        String    @unique
+  price       Decimal
+  category    String
+  coverUrl    String?   @db.VarChar(512)
+  description String?
+  stock       Int       @default(0)
+  publishDate DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  orderItems  OrderItem[]
+  inventory   InventoryLog[]
+  procurements Procurement[]
+  favorites   Favorite[]
+}
+
+model Order {
+  id            String      @id @default(cuid())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        String
+  status        OrderStatus @default(pending)
+  subtotal      Decimal
+  shippingFee   Decimal     @default(0)
+  total         Decimal
+  paymentMethod String
+  contactName   String
+  contactPhone  String
+  region        String
+  address       String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  items         OrderItem[]
+}
+
+model OrderItem {
+  id       String @id @default(cuid())
+  order    Order  @relation(fields: [orderId], references: [id])
+  orderId  String
+  book     Book   @relation(fields: [bookId], references: [id])
+  bookId   String
+  quantity Int
+  price    Decimal
+}
+
+model InventoryLog {
+  id        String         @id @default(cuid())
+  book      Book           @relation(fields: [bookId], references: [id])
+  bookId    String
+  change    Int
+  reason    InventoryReason
+  refId     String?        @db.VarChar(100)
+  createdAt DateTime       @default(now())
+}
+
+model Procurement {
+  id           String            @id @default(cuid())
+  supplier     Supplier          @relation(fields: [supplierId], references: [id])
+  supplierId   String
+  book         Book              @relation(fields: [bookId], references: [id])
+  bookId       String
+  quantity     Int
+  status       ProcurementStatus @default(open)
+  expectedDate DateTime?
+  note         String?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model Supplier {
+  id        String         @id @default(cuid())
+  name      String
+  contact   String?
+  phone     String?        @db.VarChar(32)
+  email     String?
+  rating    Int?           @db.UnsignedTinyInt
+  note      String?
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  purchases Procurement[]
+  missingRequests MissingRequest[]
+}
+
+model JournalArticle {
+  id           String    @id @default(cuid())
+  title        String
+  excerpt      String?
+  content      String?
+  coverImage   String?   @db.VarChar(512)
+  publishedAt  DateTime?
+  status       PublishStatus @default(draft)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+enum UserRole {
+  admin
+  staff
+  user
+}
+
+enum OrderStatus {
+  pending
+  processing
+  shipped
+  completed
+  cancelled
+}
+
+enum InventoryReason {
+  purchase
+  sale
+  adjust
+}
+
+enum ProcurementStatus {
+  open
+  ordered
+  received
+  cancelled
+}
+
+enum PublishStatus {
+  draft
+  published
+  archived
+}
+
+enum MissingRequestStatus {
+  open
+  reviewing
+  ordered
+  stocked
+  rejected
+}
+
+model MissingRequest {
+  id           String               @id @default(cuid())
+  title        String
+  author       String?
+  note         String?
+  status       MissingRequestStatus @default(open)
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+  user         User?                @relation(fields: [userId], references: [id])
+  userId       String?
+  supplier     Supplier?            @relation(fields: [supplierId], references: [id])
+  supplierId   String?
+  contactName  String?
+  contactEmail String?
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  book      Book     @relation(fields: [bookId], references: [id])
+  bookId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, bookId])
+}
